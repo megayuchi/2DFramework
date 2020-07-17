@@ -994,6 +994,8 @@ BOOL CD3DRenderer::Draw(DWORD dwWidth, DWORD dwHeight, DWORD dwPosX, DWORD dwPos
 	ID3D11SamplerState*		pSamplerState = INL_GetSamplerState(SAMPLER_TYPE_WRAP_POINT);
 	//pSamplerState = INL_GetSamplerState(SAMPLER_TYPE_WRAP_POINT);
 
+	float	fBlendFactor[4] = { 1.0f,1.0f,1.0f,1.0f };
+	ID3D11BlendState*		pBlendState = m_ppBlendState[BLEND_TYPE_TRANSP];
 
 	SHADER_HANDLE*		pVS = m_pVS;
 	SHADER_HANDLE*		pPS = nullptr;
@@ -1014,6 +1016,7 @@ BOOL CD3DRenderer::Draw(DWORD dwWidth, DWORD dwHeight, DWORD dwPosX, DWORD dwPos
 	//	pPS = m_pPS_Grey;
 	//}
 
+	pDeviceContext->OMSetBlendState(pBlendState, fBlendFactor, 0xffffffff);
 
 	pDeviceContext->UpdateSubresource(m_pConstantBuffer, 0, NULL, &constBuffer, 0, 0);
 
@@ -1047,7 +1050,10 @@ BOOL CD3DRenderer::Draw(DWORD dwWidth, DWORD dwHeight, DWORD dwPosX, DWORD dwPos
 	pDeviceContext->DrawIndexed(6, 0, 0);
 
 
-
+	if (pBlendState)
+	{
+		pDeviceContext->OMSetBlendState(nullptr, fBlendFactor, 0xffffffff);
+	}
 
 	pTexResource = NULL;
 	pDeviceContext->PSSetShaderResources(0, 1, &pTexResource);
@@ -1282,7 +1288,7 @@ BOOL CD3DRenderer::Create32BitsImageFromFile(BYTE** ppOutBits, DWORD* pdwOutWidt
 	if (img.format != metaData.format)
 		goto lb_close_del_return;
     
-	if (img.format != DXGI_FORMAT_R8G8B8A8_UNORM)
+	if (img.format != DXGI_FORMAT_R8G8B8A8_UNORM && img.format != DXGI_FORMAT_B8G8R8A8_UNORM)
 		goto lb_close_del_return;
 
 	if (!img.pixels)
