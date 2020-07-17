@@ -54,6 +54,8 @@ private:
 	BOOL	CreateBackBuffer(UINT uiWidth, UINT uiHeight);
 	void	CreateStates();
 	BOOL	CreateShaderResourceViewFromTex2D(ID3D11ShaderResourceView** ppOutSRV, ID3D11Texture2D** ppOutTexture, UINT Width, UINT Height, DXGI_FORMAT Format, D3D11_USAGE Usage, UINT BindFlags, UINT CPUAccessFlags, D3D11_SUBRESOURCE_DATA* pInitData);
+	BOOL	CreateTextureFromFile(ID3D11ShaderResourceView** ppOutTexResource, DWORD* pdwWidth, DWORD* pdwHeight, BOOL* pbHasAlpha, DWORD* pdwBPP, const WCHAR* wchFileName, BOOL bUseMipMap);
+	
 
 	SHADER_HANDLE*	CreateShader(char* szShaderFileName, char* szEntryName, SHADER_TYPE ShaderType, DWORD ShaderParams);
 	SHADER_HANDLE*	CreateShaderHandle(char* szShaderName, DWORD dwShaderNameLen, char* szShaderFileName, DWORD dwShaderFileNameLen, SYSTEMTIME* pCreationTime, void* pCodeBuffer, DWORD dwCodeSize, SHADER_TYPE ShaderType);
@@ -74,7 +76,8 @@ public:
 	BOOL	Initialize(HWND hWnd, IMAGE_FORMAT fmt, const WCHAR* wchShaderPath, DWORD dwFlags);
 	BOOL	CreateWritableTexture(DWORD dwWidth, DWORD dwHeight);
 	void	DeleteWritableTexture();
-
+	BOOL	CreateImageFromFile(char** ppOutBits, DWORD* pdwWidth, DWORD* pdwHeight, BOOL* pbHasAlpha, DWORD* pdwBPP, const WCHAR* wchFileName);
+	void	DeleteImage(char* pBits);
 	BOOL	UpdateTextureAsYUV(DWORD dwWidth, DWORD dwHeight, BYTE* pYBuffer, BYTE* pUBuffer, BYTE* pVBuffer, DWORD Stride);
 	BOOL	UpdateTextureAsYUV10Bits(DWORD dwWidth, DWORD dwHeight, BYTE* pYBuffer, BYTE* pUBuffer, BYTE* pVBuffer, DWORD Stride);
 

@@ -7,6 +7,29 @@
 #include "D3DRenderer.h"
 #include "D2DView.h"
 
+
+#if defined(WIN64)
+	#ifdef _DEBUG
+		#pragma comment(lib, "../DirectXTex/Bin/Desktop_2019/x64/Debug/DirectXTex.lib")	
+	#else
+		#pragma comment(lib, "../DirectXTex/Bin/Desktop_2019/x64/Release/DirectXTex.lib")	
+	#endif
+#elif defined(ARM64)
+	#ifdef _DEBUG
+		//#pragma comment(lib, "../DirectXTex/Bin/Desktop_2019/ARM64/Release/DirectXTex.lib")	
+		//#pragma comment(lib, "../DirectXTex/Bin/Desktop_2019/ARM64/Debug/DirectXTex.lib")	
+		//#pragma comment(lib, "../DirectXTex/Bin/Desktop_2019/ARM64/Release/DirectXTex.lib")	
+	#else
+		//#pragma comment(lib, "../DirectXTex/Bin/Desktop_2019/ARM64/Release/DirectXTex.lib")	
+	#endif
+#else
+	#ifdef _DEBUG
+		#pragma comment(lib, "../DirectXTex/Bin/Desktop_2019/Win32/Debug/DirectXTex.lib")	
+	#else
+		#pragma comment(lib, "../DirectXTex/Bin/Desktop_2019/Win32/Release/DirectXTex.lib")	
+	#endif
+#endif
+
 #define MAX_LOADSTRING 100
 
 // Global Variables:
@@ -75,6 +98,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	DWORD	dwHeight = g_pD3DRenderer->GetHeight();
 
 	g_pD3DRenderer->CreateWritableTexture(dwWidth, dwHeight);
+	g_pD3DRenderer->CreateImageFromFile(
 
 	//g_pD2DView->BeginDraw();
 	//g_pD2DView->DrawSurface();

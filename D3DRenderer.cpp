@@ -3,6 +3,10 @@
 #include "d3d_type.h"
 #include "D3DHelper.h"
 #include "D3DRenderer.h"
+#include "../DirectXTex/DirectXTex.h"
+#include "Util.h"
+
+using namespace DirectX;
 
 #pragma comment( lib, "dxguid.lib" )
 #pragma comment( lib, "DXGI.lib" )
@@ -1191,6 +1195,218 @@ void CD3DRenderer::OutputFailToLoadShader(char* szUniqShaderName)
 	HWND	hWnd = m_hWnd;
 
 	MessageBoxA(hWnd, szTxt, "Error", MB_ICONSTOP);
+}
+	
+BOOL CD3DRenderer::CreateImageFromFile(char** ppOutBits, DWORD* pdwWidth, DWORD* pdwHeight, BOOL* pbHasAlpha, DWORD* pdwBPP, const WCHAR* wchFileName)
+{
+	BOOL	bResult = FALSE;
+
+	// only understands .dds files for now
+	// return true if success
+
+	ID3D11ShaderResourceView*	pTexSRV = nullptr;
+
+	DirectX::TexMetadata	metaData = {};
+	DirectX::ScratchImage	scratchImage;
+
+	*pbHasAlpha = FALSE;
+	*pdwBPP = FALSE;
+
+	//char	szToonTexName[_MAX_PATH];
+	//GetNameRemovePath(szToonTexName,szFileName);
+	//if (!memcmp("ToonTable",szToonTexName,4))
+
+	FILE*	fp = nullptr;
+	_wfopen_s(&fp, wchFileName, L"rb");
+	if (!fp)
+		goto lb_return;
+
+	DWORD	dwSize = (DWORD)GetFileSizeWithFP(fp);
+	char*	pRawData = new char[dwSize];
+	fread(pRawData, 1, dwSize, fp);
+
+	HRESULT hr = S_OK;
+
+
+
+	ID3D11Texture2D*	pTex = nullptr;
+
+
+	hr = LoadFromDDSMemory(pRawData, dwSize, DDS_FLAGS_NONE, &metaData, scratchImage);
+	if (FAILED(hr))
+	{
+		hr = LoadFromWICMemory(pRawData, dwSize, WIC_FLAGS_NONE, &metaData, scratchImage);
+		if (FAILED(hr))
+		{
+#ifdef _DEBUG 
+			__debugbreak();
+#endif
+			goto lb_close_del_return;
+		}
+	}
+	const DirectX::Image*	pImages = scratchImage.GetImages();
+
+	auto t = pImages->pixels;
+
+
+	metaData.arraySize;
+	/*
+	//--- 1D or 2D texture case ---------------------------------------------------
+        size_t idx = 0;
+        for (size_t item = 0; item < metadata.arraySize; ++item)
+        {
+            for (size_t level = 0; level < metadata.mipLevels; ++level)
+            {
+                size_t index = metadata.ComputeIndex(level, item, 0);
+                if (index >= nimages)
+                    return E_FAIL;
+
+                const Image& img = srcImages[index];
+
+                if (img.format != metadata.format)
+                    return E_FAIL;
+
+                if (!img.pixels)
+                    return E_POINTER;
+
+                assert(idx < (metadata.mipLevels * metadata.arraySize));
+
+                initData[idx].pSysMem = img.pixels;
+                initData[idx].SysMemPitch = static_cast<DWORD>(img.rowPitch);
+                initData[idx].SysMemSlicePitch = static_cast<DWORD>(img.slicePitch);
+                ++idx;
+            }
+        }
+
+		*/
+
+	hr = CreateShaderResourceViewEx(m_pD3DDevice, pImages, scratchImage.GetImageCount(), metaData, D3D11_USAGE_IMMUTABLE, D3D11_BIND_SHADER_RESOURCE, 0, 0, false, &pTexSRV);
+	if (FAILED(hr))
+	{
+#ifdef _DEBUG 
+		__debugbreak();
+#endif
+		goto lb_close_del_return;
+	}
+	pTexSRV->GetResource((ID3D11Resource**)&pTex);
+
+	D3D11_TEXTURE2D_DESC desc;
+	pTex->GetDesc(&desc);
+
+
+	if (DXGI_FORMAT_R8G8B8A8_UNORM == desc.Format || DXGI_FORMAT_B8G8R8A8_UNORM == desc.Format || DXGI_FORMAT_BC3_UNORM == desc.Format)
+	{
+		*pbHasAlpha = TRUE;
+	}
+
+	*pdwBPP = 4;
+	*pdwWidth = (DWORD)desc.Width;
+	*pdwHeight = (DWORD)desc.Height;
+
+	bResult = TRUE;
+
+lb_close_del_return:
+	if (pTex)
+	{
+		pTex->Release();
+		pTex = nullptr;
+	}
+	delete[] pRawData;
+	fclose(fp);
+
+lb_return:
+	return bResult;
+}
+void CD3DRenderer::DeleteImage(char* pBits)
+{
+	free(pBits);
+}
+BOOL CD3DRenderer::CreateTextureFromFile(ID3D11ShaderResourceView** ppOutTexResource, DWORD* pdwWidth, DWORD* pdwHeight, BOOL* pbHasAlpha, DWORD* pdwBPP, const WCHAR* wchFileName, BOOL bUseMipMap)
+{
+	BOOL	bResult = FALSE;
+
+	// only understands .dds files for now
+	// return true if success
+
+	ID3D11ShaderResourceView*	pTexSRV = nullptr;
+
+	DirectX::TexMetadata	metaData = {};
+	DirectX::ScratchImage	scratchImage;
+
+	*pbHasAlpha = FALSE;
+	*pdwBPP = FALSE;
+
+	//char	szToonTexName[_MAX_PATH];
+	//GetNameRemovePath(szToonTexName,szFileName);
+	//if (!memcmp("ToonTable",szToonTexName,4))
+
+	FILE*	fp = nullptr;
+	_wfopen_s(&fp, wchFileName, L"rb");
+	if (!fp)
+		goto lb_return;
+
+	DWORD	dwSize = (DWORD)GetFileSizeWithFP(fp);
+	char*	pRawData = new char[dwSize];
+	fread(pRawData, 1, dwSize, fp);
+
+	HRESULT hr = S_OK;
+
+
+
+	ID3D11Texture2D*	pTex = nullptr;
+
+
+	hr = LoadFromDDSMemory(pRawData, dwSize, DDS_FLAGS_NONE, &metaData, scratchImage);
+	if (FAILED(hr))
+	{
+		hr = LoadFromWICMemory(pRawData, dwSize, WIC_FLAGS_NONE, &metaData, scratchImage);
+		if (FAILED(hr))
+		{
+#ifdef _DEBUG 
+			__debugbreak();
+#endif
+			goto lb_close_del_return;
+		}
+	}
+	const DirectX::Image*	pImages = scratchImage.GetImages();
+
+	hr = CreateShaderResourceViewEx(m_pD3DDevice, pImages, scratchImage.GetImageCount(), metaData, D3D11_USAGE_IMMUTABLE, D3D11_BIND_SHADER_RESOURCE, 0, 0, false, &pTexSRV);
+	if (FAILED(hr))
+	{
+#ifdef _DEBUG 
+		__debugbreak();
+#endif
+		goto lb_close_del_return;
+	}
+	pTexSRV->GetResource((ID3D11Resource**)&pTex);
+
+	D3D11_TEXTURE2D_DESC desc;
+	pTex->GetDesc(&desc);
+
+
+	if (DXGI_FORMAT_R8G8B8A8_UNORM == desc.Format || DXGI_FORMAT_B8G8R8A8_UNORM == desc.Format || DXGI_FORMAT_BC3_UNORM == desc.Format)
+	{
+		*pbHasAlpha = TRUE;
+	}
+
+	*pdwBPP = 4;
+	*pdwWidth = (DWORD)desc.Width;
+	*pdwHeight = (DWORD)desc.Height;
+
+	bResult = TRUE;
+
+lb_close_del_return:
+	if (pTex)
+	{
+		pTex->Release();
+		pTex = nullptr;
+	}
+	delete[] pRawData;
+	fclose(fp);
+
+lb_return:
+	*ppOutTexResource = pTexSRV;
+	return bResult;
 }
 void CD3DRenderer::Cleanup()
 {
