@@ -198,25 +198,31 @@
     <None Include="math.inl" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shaders\sh_common.hlsl" />
+    <None Include="Shaders\sh_common.hlsl">
+      <FileType>Document</FileType>
+    </None>
     <CustomBuild Include="Shaders\sh_sprite.hlsl">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">fxc %(FullPath) /T vs_5_0 /E vsDefault  /Fc ./Shaders/%(FileName).vsm
 fxc %(FullPath) /T ps_5_0 /E psRGBA  /Fc ./Shaders/%(FileName).psm
+
 </Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">fxc %(FullPath) /T vs_5_0 /E vsDefault  /Fc ./Shaders/%(FileName).vsm
 fxc %(FullPath) /T ps_5_0 /E psRGBA  /Fc ./Shaders/%(FileName).psm
+
 </Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">fxc %(FullPath) /T vs_5_0 /E vsDefault  /Fc ./Shaders/%(FileName).vsm
 fxc %(FullPath) /T ps_5_0 /E psRGBA  /Fc ./Shaders/%(FileName).psm
+
 </Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">fxc %(FullPath) /T vs_5_0 /E vsDefault  /Fc ./Shaders/%(FileName).vsm
 fxc %(FullPath) /T ps_5_0 /E psRGBA  /Fc ./Shaders/%(FileName).psm
+
 </Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(FileName).psm</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(FileName).psm</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(FileName).psm</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(FileName).psm</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(FileName).hlsl</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(FileName).hlsl</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(FileName).hlsl</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(FileName).hlsl</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compliing %(FileName).hlsl</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compliing %(FileName).hlsl</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compliing %(FileName).hlsl</Message>

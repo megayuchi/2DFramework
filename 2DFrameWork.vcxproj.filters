@@ -106,8 +106,10 @@
     <FxCompile Include="Shaders\sh_common.hlsl">
       <Filter>D3D\Shader</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\sh_sprite.hlsl">
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="Shaders\sh_sprite.hlsl">
       <Filter>D3D\Shader</Filter>
-    </FxCompile>
+    </CustomBuild>
   </ItemGroup>
 </Project>
