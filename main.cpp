@@ -223,7 +223,7 @@ void ProcessD3D(const BYTE* pImageBits, DWORD dwImageWidth, DWORD dwImageHeight)
 	//g_pD3DRenderer->UpdateYUVTexture(dwImageWidth, dwImageHeight, pYBuffer, pUBuffer, pVBuffer, dwImageStride);
 
 	g_pD3DRenderer->BeginRender(0xff0000ff, 0);
-	g_pD3DRenderer->Draw(dwRenderWidth, dwRenderHeight, 0, 0, 0xff00ff00, 0);
+	g_pD3DRenderer->Draw(dwImageWidth, dwImageHeight, 0, 0, 0xff00ff00, 0);
 	g_pD3DRenderer->EndRender();
 
 	g_pD3DRenderer->Present(g_hMainWindow);
