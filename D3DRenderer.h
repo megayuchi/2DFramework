@@ -29,6 +29,7 @@ private:
 	ID3D11DepthStencilView*		m_pDSV = nullptr;
 	ID3D11Texture2D*			m_pDepthStencil = nullptr;
 
+	WCHAR	m_wchShaderPath[_MAX_PATH] = {};
 	ID3D11DepthStencilState*	m_ppDepthStencilState[MAX_DEPTH_TYPE_NUM] = {};
 	ID3D11BlendState*			m_ppBlendState[BLEND_TYPE_NUM] = {};
 	ID3D11RasterizerState*		m_ppRasterizeState[MAX_RASTER_TYPE_NUM] = {};
@@ -70,8 +71,7 @@ private:
 
 	void	Cleanup();
 public:
-	BOOL	Initialize(HWND hWnd, IMAGE_FORMAT fmt, DWORD dwFlags);
-
+	BOOL	Initialize(HWND hWnd, IMAGE_FORMAT fmt, const WCHAR* wchShaderPath, DWORD dwFlags);
 	BOOL	CreateWritableTexture(DWORD dwWidth, DWORD dwHeight);
 	void	DeleteWritableTexture();
 

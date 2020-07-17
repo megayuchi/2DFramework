@@ -14,7 +14,7 @@ CD3DRenderer::CD3DRenderer()
 
 }
 
-BOOL CD3DRenderer::Initialize(HWND hWnd, IMAGE_FORMAT fmt, DWORD dwFlags)
+BOOL CD3DRenderer::Initialize(HWND hWnd, IMAGE_FORMAT fmt, const WCHAR* wchShaderPath, DWORD dwFlags)
 {
 	BOOL	bResult = FALSE;
 
@@ -23,6 +23,14 @@ BOOL CD3DRenderer::Initialize(HWND hWnd, IMAGE_FORMAT fmt, DWORD dwFlags)
 	m_hWnd = hWnd;
 	m_dwCreateFlags = dwFlags;
 	m_ImageFormat = fmt;
+
+	WCHAR	wchOldPath[_MAX_PATH] = {};
+	GetCurrentDirectory(_MAX_PATH, wchOldPath);
+
+	SetCurrentDirectory(wchShaderPath);
+	GetCurrentDirectory((DWORD)_countof(m_wchShaderPath), m_wchShaderPath);
+
+	SetCurrentDirectory(wchOldPath);
 
 	UINT createDeviceFlags = 0;
 #ifdef _USE_DEBUG_DEVICE
@@ -670,7 +678,10 @@ BOOL CD3DRenderer::InitShader()
 
 	HRESULT	hr = S_OK;
 
+	WCHAR	wchOldPath[_MAX_PATH] = {};
+	GetCurrentDirectory(_MAX_PATH, wchOldPath);
 
+	SetCurrentDirectory(m_wchShaderPath);
 	m_pVS = CreateShader("sh_sprite.hlsl", "vsDefault", SHADER_TYPE_VERTEX_SHADER, 0);
 	m_pPS_RGBA = CreateShader("sh_sprite.hlsl", "psRGBA", SHADER_TYPE_PIXEL_SHADER, 0);
 	m_pPS_YUV = CreateShader("sh_sprite.hlsl", "psYUV", SHADER_TYPE_PIXEL_SHADER, 0);
@@ -692,6 +703,7 @@ BOOL CD3DRenderer::InitShader()
 	if (FAILED(hr))
 		__debugbreak();
 
+	SetCurrentDirectory(wchOldPath);
 
 	bResult = TRUE;
 
