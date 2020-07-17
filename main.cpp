@@ -98,7 +98,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	DWORD	dwHeight = g_pD3DRenderer->GetHeight();
 
 	g_pD3DRenderer->CreateWritableTexture(dwWidth, dwHeight);
-	g_pD3DRenderer->CreateImageFromFile(
+	char*	pBits = nullptr;
+	DWORD	dwImageWidth = 0;
+	DWORD	dwImageHeight = 0;
+	if (g_pD3DRenderer->Create32BitsImageFromFile(&pBits, &dwImageWidth, &dwImageHeight, L"./Data/03_chara.png"))
+	{
+		g_pD3DRenderer->DeleteImage(pBits);
+		pBits = nullptr;
+	}
+
 
 	//g_pD2DView->BeginDraw();
 	//g_pD2DView->DrawSurface();

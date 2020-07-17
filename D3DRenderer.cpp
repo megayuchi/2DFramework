@@ -878,7 +878,7 @@ SHADER_HANDLE* CD3DRenderer::CreateShader(char* szShaderFileName, char* szEntryN
 
 	// 중복되는 쉐이더코드는 없다. 따라서 새로 생성한다.
 
-	pNewShaderHandle = CreateShaderHandle(szShaderName, dwShaderNameLen, szPureFileName, strlen(szPureFileName), &CreationTime, pCodeBuffer, dwCodeSize, ShaderType);
+	pNewShaderHandle = CreateShaderHandle(szShaderName, dwShaderNameLen, szPureFileName, (DWORD)strlen(szPureFileName), &CreationTime, pCodeBuffer, dwCodeSize, ShaderType);
 
 	if (pD3DShader)
 	{
@@ -1197,7 +1197,7 @@ void CD3DRenderer::OutputFailToLoadShader(char* szUniqShaderName)
 	MessageBoxA(hWnd, szTxt, "Error", MB_ICONSTOP);
 }
 	
-BOOL CD3DRenderer::CreateImageFromFile(char** ppOutBits, DWORD* pdwWidth, DWORD* pdwHeight, BOOL* pbHasAlpha, DWORD* pdwBPP, const WCHAR* wchFileName)
+BOOL CD3DRenderer::Create32BitsImageFromFile(char** ppOutBits, DWORD* pdwOutWidth, DWORD* pdwOutHeight, const WCHAR* wchFileName)
 {
 	BOOL	bResult = FALSE;
 
@@ -1208,9 +1208,6 @@ BOOL CD3DRenderer::CreateImageFromFile(char** ppOutBits, DWORD* pdwWidth, DWORD*
 
 	DirectX::TexMetadata	metaData = {};
 	DirectX::ScratchImage	scratchImage;
-
-	*pbHasAlpha = FALSE;
-	*pdwBPP = FALSE;
 
 	//char	szToonTexName[_MAX_PATH];
 	//GetNameRemovePath(szToonTexName,szFileName);
@@ -1226,11 +1223,7 @@ BOOL CD3DRenderer::CreateImageFromFile(char** ppOutBits, DWORD* pdwWidth, DWORD*
 	fread(pRawData, 1, dwSize, fp);
 
 	HRESULT hr = S_OK;
-
-
-
-	ID3D11Texture2D*	pTex = nullptr;
-
+	
 
 	hr = LoadFromDDSMemory(pRawData, dwSize, DDS_FLAGS_NONE, &metaData, scratchImage);
 	if (FAILED(hr))
@@ -1245,72 +1238,38 @@ BOOL CD3DRenderer::CreateImageFromFile(char** ppOutBits, DWORD* pdwWidth, DWORD*
 		}
 	}
 	const DirectX::Image*	pImages = scratchImage.GetImages();
-
-	auto t = pImages->pixels;
-
-
-	metaData.arraySize;
-	/*
-	//--- 1D or 2D texture case ---------------------------------------------------
-        size_t idx = 0;
-        for (size_t item = 0; item < metadata.arraySize; ++item)
-        {
-            for (size_t level = 0; level < metadata.mipLevels; ++level)
-            {
-                size_t index = metadata.ComputeIndex(level, item, 0);
-                if (index >= nimages)
-                    return E_FAIL;
-
-                const Image& img = srcImages[index];
-
-                if (img.format != metadata.format)
-                    return E_FAIL;
-
-                if (!img.pixels)
-                    return E_POINTER;
-
-                assert(idx < (metadata.mipLevels * metadata.arraySize));
-
-                initData[idx].pSysMem = img.pixels;
-                initData[idx].SysMemPitch = static_cast<DWORD>(img.rowPitch);
-                initData[idx].SysMemSlicePitch = static_cast<DWORD>(img.slicePitch);
-                ++idx;
-            }
-        }
-
-		*/
-
-	hr = CreateShaderResourceViewEx(m_pD3DDevice, pImages, scratchImage.GetImageCount(), metaData, D3D11_USAGE_IMMUTABLE, D3D11_BIND_SHADER_RESOURCE, 0, 0, false, &pTexSRV);
-	if (FAILED(hr))
-	{
-#ifdef _DEBUG 
-		__debugbreak();
-#endif
+	
+	size_t index = metaData.ComputeIndex(0, 0, 0);
+	const Image& img = pImages[0];
+	
+	if (img.format != metaData.format)
 		goto lb_close_del_return;
-	}
-	pTexSRV->GetResource((ID3D11Resource**)&pTex);
+    
+	if (img.format != DXGI_FORMAT_R8G8B8A8_UNORM)
+		goto lb_close_del_return;
 
-	D3D11_TEXTURE2D_DESC desc;
-	pTex->GetDesc(&desc);
+	if (!img.pixels)
+		goto lb_close_del_return;
 
+	DWORD	dwMemSize = (DWORD)(img.width * img.height * 4);
+	char* pBits = (char*)malloc(dwMemSize);
+	memset(pBits, 0, dwMemSize);
 
-	if (DXGI_FORMAT_R8G8B8A8_UNORM == desc.Format || DXGI_FORMAT_B8G8R8A8_UNORM == desc.Format || DXGI_FORMAT_BC3_UNORM == desc.Format)
+	char*	pDest = pBits;
+	char*	pSrc = (char*)img.pixels;
+	for (DWORD y = 0; y < img.height; y++)
 	{
-		*pbHasAlpha = TRUE;
+		memcpy(pDest, pSrc, img.width * 4);
+		pDest += (img.width * 4);
+		pSrc += img.rowPitch;
 	}
-
-	*pdwBPP = 4;
-	*pdwWidth = (DWORD)desc.Width;
-	*pdwHeight = (DWORD)desc.Height;
-
+	*ppOutBits = pBits;
+	*pdwOutWidth = (DWORD)img.width;
+	*pdwOutHeight = (DWORD)img.height;
+			
 	bResult = TRUE;
 
 lb_close_del_return:
-	if (pTex)
-	{
-		pTex->Release();
-		pTex = nullptr;
-	}
 	delete[] pRawData;
 	fclose(fp);
 
@@ -1334,7 +1293,7 @@ BOOL CD3DRenderer::CreateTextureFromFile(ID3D11ShaderResourceView** ppOutTexReso
 	DirectX::ScratchImage	scratchImage;
 
 	*pbHasAlpha = FALSE;
-	*pdwBPP = FALSE;
+	*pdwBPP = 0;
 
 	//char	szToonTexName[_MAX_PATH];
 	//GetNameRemovePath(szToonTexName,szFileName);
