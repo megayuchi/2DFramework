@@ -101,11 +101,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	char*	pBits = nullptr;
 	DWORD	dwImageWidth = 0;
 	DWORD	dwImageHeight = 0;
-	if (g_pD3DRenderer->Create32BitsImageFromFile(&pBits, &dwImageWidth, &dwImageHeight, L"./Data/03_chara.png"))
+	if (!g_pD3DRenderer->Create32BitsImageFromFile(&pBits, &dwImageWidth, &dwImageHeight, L"./Data/03_chara.png"))
 	{
-		g_pD3DRenderer->DeleteImage(pBits);
-		pBits = nullptr;
+		__debugbreak();
 	}
+	
 
 
 	//g_pD2DView->BeginDraw();
@@ -145,9 +145,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			ProcessD3D();
 		}
 	}
-
-
-
+	if (pBits)
+	{
+		g_pD3DRenderer->DeleteImage(pBits);
+		pBits = nullptr;
+	}
 
 	if (g_pD2DView)
 	{
