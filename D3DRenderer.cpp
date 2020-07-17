@@ -1071,6 +1071,43 @@ void CD3DRenderer::Present(HWND hWnd)
 	m_pSwapChain->Present(uiSyncInterval, 0);
 
 }
+BOOL CD3DRenderer::UpdateTextureAsRGBA(const BYTE* pBits, DWORD dwWidth, DWORD dwHeight)
+{
+	if (0 == dwWidth || 0 == dwHeight)
+		__debugbreak();
+
+	if (m_dwTextureWidth != dwWidth || m_dwTextureHeight != dwHeight)
+	{
+		// 텍스쳐 다시 생성
+		DeleteWritableTexture();
+		CreateWritableTexture(dwWidth, dwHeight);
+	}
+
+	ID3D11Device*			pDevice = m_pD3DDevice;
+	ID3D11DeviceContext*	pDeviceContext = m_pImmediateContext;
+
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	memset(&mappedResource, 0, sizeof(mappedResource));
+
+	HRESULT hr = pDeviceContext->Map(m_pTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	if (FAILED(hr))
+		__debugbreak();
+
+	const BYTE*	pSrc = pBits;
+	BYTE*	pDest = (BYTE*)mappedResource.pData;
+	//+(mappedResource.RowPitch * y);
+	
+	for (DWORD y = 0; y < dwHeight; y++)
+	{
+		memcpy(pDest, pSrc, dwWidth * 4);
+		pDest += mappedResource.RowPitch;
+		pSrc += (dwWidth*4);
+	}
+	pDeviceContext->Unmap(m_pTexture, 0);
+
+	return TRUE;
+
+}
 BOOL CD3DRenderer::UpdateTextureAsYUV(DWORD dwWidth, DWORD dwHeight, BYTE* pYBuffer, BYTE* pUBuffer, BYTE* pVBuffer, DWORD Stride)
 {
 	if (0 == dwWidth || 0 == dwHeight)
@@ -1197,7 +1234,7 @@ void CD3DRenderer::OutputFailToLoadShader(char* szUniqShaderName)
 	MessageBoxA(hWnd, szTxt, "Error", MB_ICONSTOP);
 }
 	
-BOOL CD3DRenderer::Create32BitsImageFromFile(char** ppOutBits, DWORD* pdwOutWidth, DWORD* pdwOutHeight, const WCHAR* wchFileName)
+BOOL CD3DRenderer::Create32BitsImageFromFile(BYTE** ppOutBits, DWORD* pdwOutWidth, DWORD* pdwOutHeight, const WCHAR* wchFileName)
 {
 	BOOL	bResult = FALSE;
 
@@ -1252,11 +1289,11 @@ BOOL CD3DRenderer::Create32BitsImageFromFile(char** ppOutBits, DWORD* pdwOutWidt
 		goto lb_close_del_return;
 
 	DWORD	dwMemSize = (DWORD)(img.width * img.height * 4);
-	char* pBits = (char*)malloc(dwMemSize);
+	BYTE* pBits = (BYTE*)malloc(dwMemSize);
 	memset(pBits, 0, dwMemSize);
 
-	char*	pDest = pBits;
-	char*	pSrc = (char*)img.pixels;
+	BYTE*	pDest = pBits;
+	BYTE*	pSrc = (BYTE*)img.pixels;
 	for (DWORD y = 0; y < img.height; y++)
 	{
 		memcpy(pDest, pSrc, img.width * 4);
@@ -1276,7 +1313,7 @@ lb_close_del_return:
 lb_return:
 	return bResult;
 }
-void CD3DRenderer::DeleteImage(char* pBits)
+void CD3DRenderer::DeleteImage(BYTE* pBits)
 {
 	free(pBits);
 }

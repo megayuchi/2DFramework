@@ -47,7 +47,7 @@ float	g_fRefreshRate = 60.0f;
 ULONGLONG	g_PrvRenderTick = 0;
 
 void ProcessD2D();
-void ProcessD3D();
+void ProcessD3D(const BYTE* pImageBits, DWORD dwImageWidth, DWORD dwImageHeight);
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -98,10 +98,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	DWORD	dwHeight = g_pD3DRenderer->GetHeight();
 
 	g_pD3DRenderer->CreateWritableTexture(dwWidth, dwHeight);
-	char*	pBits = nullptr;
+	BYTE*	pImageBits = nullptr;
 	DWORD	dwImageWidth = 0;
 	DWORD	dwImageHeight = 0;
-	if (!g_pD3DRenderer->Create32BitsImageFromFile(&pBits, &dwImageWidth, &dwImageHeight, L"./Data/03_chara.png"))
+	if (!g_pD3DRenderer->Create32BitsImageFromFile(&pImageBits, &dwImageWidth, &dwImageHeight, L"./Data/03_chara.png"))
 	{
 		__debugbreak();
 	}
@@ -142,13 +142,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		else
 		{
 			//ProcessD2D();
-			ProcessD3D();
+			ProcessD3D(pImageBits, dwImageWidth, dwImageHeight);
 		}
 	}
-	if (pBits)
+	if (pImageBits)
 	{
-		g_pD3DRenderer->DeleteImage(pBits);
-		pBits = nullptr;
+		g_pD3DRenderer->DeleteImage(pImageBits);
+		pImageBits = nullptr;
 	}
 
 	if (g_pD2DView)
@@ -195,7 +195,7 @@ void ProcessD2D()
 
 }
 
-void ProcessD3D()
+void ProcessD3D(const BYTE* pImageBits, DWORD dwImageWidth, DWORD dwImageHeight)
 {
 	if (!g_pD3DRenderer)
 		return;
@@ -203,13 +203,8 @@ void ProcessD3D()
 	//
 	// Ä«ÇÇ
 	//
-	DWORD	dwImageWidth = 0;
-	DWORD	dwImageHeight = 0;
-	DWORD	dwImageStride = 0;
+	
 
-	BYTE*	pYBuffer = nullptr;
-	BYTE*	pUBuffer = nullptr;
-	BYTE*	pVBuffer = nullptr;
 
 	DWORD	dwScreenWidth = g_pD3DRenderer->GetWidth();
 	DWORD	dwScreenHeight = g_pD3DRenderer->GetHeight();
@@ -217,6 +212,14 @@ void ProcessD3D()
 	DWORD	dwRenderWidth = dwScreenWidth;
 	DWORD	dwRenderHeight = dwScreenHeight;
 
+	g_pD3DRenderer->UpdateTextureAsRGBA(pImageBits, dwImageWidth, dwImageHeight);
+
+	//DWORD	dwImageWidth = 0;
+	//DWORD	dwImageHeight = 0;
+	//DWORD	dwImageStride = 0;
+	//BYTE*	pYBuffer = nullptr;
+	//BYTE*	pUBuffer = nullptr;
+	//BYTE*	pVBuffer = nullptr;
 	//g_pD3DRenderer->UpdateYUVTexture(dwImageWidth, dwImageHeight, pYBuffer, pUBuffer, pVBuffer, dwImageStride);
 
 	g_pD3DRenderer->BeginRender(0xff0000ff, 0);

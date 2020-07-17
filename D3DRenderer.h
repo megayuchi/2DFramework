@@ -76,9 +76,10 @@ public:
 	BOOL	Initialize(HWND hWnd, IMAGE_FORMAT fmt, const WCHAR* wchShaderPath, DWORD dwFlags);
 	BOOL	CreateWritableTexture(DWORD dwWidth, DWORD dwHeight);
 	void	DeleteWritableTexture();
-	BOOL	Create32BitsImageFromFile(char** ppOutBits, DWORD* pdwOutWidth, DWORD* pdwOutHeight, const WCHAR* wchFileName);
-	void	DeleteImage(char* pBits);
+	BOOL	Create32BitsImageFromFile(BYTE** ppOutBits, DWORD* pdwOutWidth, DWORD* pdwOutHeight, const WCHAR* wchFileName);
+	void	DeleteImage(BYTE* pBits);
 
+	BOOL	UpdateTextureAsRGBA(const BYTE* pBits, DWORD dwWidth, DWORD dwHeight);
 	BOOL	UpdateTextureAsYUV(DWORD dwWidth, DWORD dwHeight, BYTE* pYBuffer, BYTE* pUBuffer, BYTE* pVBuffer, DWORD Stride);
 	BOOL	UpdateTextureAsYUV10Bits(DWORD dwWidth, DWORD dwHeight, BYTE* pYBuffer, BYTE* pUBuffer, BYTE* pVBuffer, DWORD Stride);
 
