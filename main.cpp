@@ -9,21 +9,21 @@
 
 #if defined(WIN64)
 	#ifdef _DEBUG
-		#pragma comment(lib, "DirectXTex/lib/x64/Debug/DirectXTex.lib")	
+		#pragma comment(lib, "DirectXTex/lib_x64_debug/DirectXTex.lib")	
 	#else
-		#pragma comment(lib, "DirectXTex/lib/x64/Release/DirectXTex.lib")	
+		#pragma comment(lib, "DirectXTex/lib_x64_release/DirectXTex.lib")	
 	#endif
 #elif defined(ARM64)
 	#ifdef _DEBUG
-		#pragma comment(lib, "DirectXTex/lib/ARM64/Debug/DirectXTex.lib")	
+		#pragma comment(lib, "DirectXTex/lib_ARM64_debug/DirectXTex.lib")	
 	#else
-		#pragma comment(lib, "DirectXTex/lib/ARM64/Release/DirectXTex.lib")	
+		#pragma comment(lib, "DirectXTex/lib_ARM64_release/DirectXTex.lib")	
 	#endif
 #else
 	#ifdef _DEBUG
-		#pragma comment(lib, "DirectXTex/lib/x86/Debug/DirectXTex.lib")	
+		#pragma comment(lib, "DirectXTex/lib_x86_debug/DirectXTex.lib")	
 	#else
-		#pragma comment(lib, "DirectXTex/lib/x86/Release/DirectXTex.lib")	
+		#pragma comment(lib, "DirectXTex/lib_x86_release/DirectXTex.lib")	
 	#endif
 #endif
 
