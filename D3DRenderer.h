@@ -2,43 +2,52 @@
 
 #include "d3d_type.h"
 
+
 class CD3DRenderer
 {
-	HWND	m_hWnd;
-	DWORD	m_dwWidth;
-	DWORD	m_dwHeight;
-	DWORD	m_dwCreateFlags;
+public:
+	enum IMAGE_FORMAT
+	{
+		IMAGE_FORMAT_YUV,
+		IMAGE_FORMAT_RGBA
+	};
+private:
+	HWND	m_hWnd = nullptr;
+	DWORD	m_dwWidth = 0;
+	DWORD	m_dwHeight = 0;
+	DWORD	m_dwCreateFlags = 0;
+
+	IMAGE_FORMAT	m_ImageFormat = IMAGE_FORMAT_RGBA;
+	D3D11_FILL_MODE				m_FillMode = D3D11_FILL_SOLID;
+	D3D_FEATURE_LEVEL			m_FeatureLevel = D3D_FEATURE_LEVEL_9_1;
+	D3D_DRIVER_TYPE				m_driverType = D3D_DRIVER_TYPE_UNKNOWN;
+	ID3D11Device*				m_pD3DDevice = nullptr;
+	ID3D11DeviceContext*		m_pImmediateContext = nullptr;
+	IDXGISwapChain*				m_pSwapChain = nullptr;
+	ID3D11Texture2D*			m_pBackBuffer = nullptr;
+	ID3D11RenderTargetView*		m_pDiffuseRTV = nullptr;
+	ID3D11DepthStencilView*		m_pDSV = nullptr;
+	ID3D11Texture2D*			m_pDepthStencil = nullptr;
+
+	ID3D11DepthStencilState*	m_ppDepthStencilState[MAX_DEPTH_TYPE_NUM] = {};
+	ID3D11BlendState*			m_ppBlendState[BLEND_TYPE_NUM] = {};
+	ID3D11RasterizerState*		m_ppRasterizeState[MAX_RASTER_TYPE_NUM] = {};
+	ID3D11SamplerState*			m_ppSamplerState[MAX_SAMPLER_TYPE_NUM] = {};
+	D3D11_VIEWPORT				m_vp = {};
 
 
-	D3D11_FILL_MODE				m_FillMode;
-	D3D_FEATURE_LEVEL			m_FeatureLevel;
-	D3D_DRIVER_TYPE				m_driverType;
-	ID3D11Device*				m_pD3DDevice;
-	ID3D11DeviceContext*		m_pImmediateContext;
-	IDXGISwapChain*				m_pSwapChain;
-	ID3D11Texture2D*			m_pBackBuffer;
-	ID3D11RenderTargetView*		m_pDiffuseRTV;
-	ID3D11DepthStencilView*		m_pDSV;
-	ID3D11Texture2D*			m_pDepthStencil;
+	DWORD						m_dwTextureWidth = 0;
+	DWORD						m_dwTextureHeight = 0;
+	ID3D11Texture2D*			m_pTexture = nullptr;
+	ID3D11ShaderResourceView*	m_pTextureSRV = nullptr;
 
-	ID3D11DepthStencilState*	m_ppDepthStencilState[MAX_DEPTH_TYPE_NUM];
-	ID3D11BlendState*			m_ppBlendState[BLEND_TYPE_NUM];
-	ID3D11RasterizerState*		m_ppRasterizeState[MAX_RASTER_TYPE_NUM];
-	ID3D11SamplerState*			m_ppSamplerState[MAX_SAMPLER_TYPE_NUM];
-	D3D11_VIEWPORT				m_vp;
-
-
-	DWORD						m_dwTextureWidth;
-	DWORD						m_dwTextureHeight;
-	ID3D11Texture2D*			m_pYUVTexture;
-	ID3D11ShaderResourceView*	m_pYUVTextureSRV;
-
-	ID3D11Buffer*				m_pVertexBuffer;
-	ID3D11Buffer*				m_pIndexBuffer;
-	ID3D11Buffer*				m_pConstantBuffer;
-	ID3D11InputLayout*			m_pVertexLayout;
-	SHADER_HANDLE*				m_pVS;
-	SHADER_HANDLE*				m_pPS;
+	ID3D11Buffer*				m_pVertexBuffer = nullptr;
+	ID3D11Buffer*				m_pIndexBuffer = nullptr;
+	ID3D11Buffer*				m_pConstantBuffer = nullptr;
+	ID3D11InputLayout*			m_pVertexLayout = nullptr;
+	SHADER_HANDLE*				m_pVS = nullptr;
+	SHADER_HANDLE*				m_pPS_YUV = nullptr;
+	SHADER_HANDLE*				m_pPS_RGBA = nullptr;
 
 
 	BOOL	CreateBackBuffer(UINT uiWidth, UINT uiHeight);
@@ -61,13 +70,13 @@ class CD3DRenderer
 
 	void	Cleanup();
 public:
-	BOOL	Initialize(HWND hWnd, DWORD dwFlags);
+	BOOL	Initialize(HWND hWnd, IMAGE_FORMAT fmt, DWORD dwFlags);
 
 	BOOL	CreateWritableTexture(DWORD dwWidth, DWORD dwHeight);
 	void	DeleteWritableTexture();
 
-	BOOL	UpdateYUVTexture(DWORD dwWidth, DWORD dwHeight, BYTE* pYBuffer, BYTE* pUBuffer, BYTE* pVBuffer, DWORD Stride);
-	BOOL	UpdateYUVTexture10Bits(DWORD dwWidth, DWORD dwHeight, BYTE* pYBuffer, BYTE* pUBuffer, BYTE* pVBuffer, DWORD Stride);
+	BOOL	UpdateTextureAsYUV(DWORD dwWidth, DWORD dwHeight, BYTE* pYBuffer, BYTE* pUBuffer, BYTE* pVBuffer, DWORD Stride);
+	BOOL	UpdateTextureAsYUV10Bits(DWORD dwWidth, DWORD dwHeight, BYTE* pYBuffer, BYTE* pUBuffer, BYTE* pVBuffer, DWORD Stride);
 
 	void	BeginRender(DWORD dwColor, DWORD dwFlags);
 	BOOL	Draw(DWORD dwWidth, DWORD dwHeight, DWORD dwPosX, DWORD dwPosY, DWORD dwColor, DWORD dwFlags);

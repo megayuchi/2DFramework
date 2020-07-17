@@ -69,7 +69,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	//g_pD2DView->Initialize(g_hMainWindow);
 
 	g_pD3DRenderer = new CD3DRenderer;
-	g_pD3DRenderer->Initialize(g_hMainWindow, 0);
+	g_pD3DRenderer->Initialize(g_hMainWindow, CD3DRenderer::IMAGE_FORMAT_RGBA, 0);
 
 	DWORD	dwWidth = g_pD3DRenderer->GetWidth();
 	DWORD	dwHeight = g_pD3DRenderer->GetHeight();

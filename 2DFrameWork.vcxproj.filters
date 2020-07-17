@@ -28,6 +28,9 @@
     <Filter Include="Util">
       <UniqueIdentifier>{af86dac8-f048-4db3-97d0-469cba61c4c2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="D3D\Shader">
+      <UniqueIdentifier>{0b37ae14-b95b-4854-a7ec-366a7d730f75}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -98,5 +101,13 @@
     <None Include="math.inl">
       <Filter>D3D</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shaders\sh_common.hlsl">
+      <Filter>D3D\Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\sh_sprite.hlsl">
+      <Filter>D3D\Shader</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

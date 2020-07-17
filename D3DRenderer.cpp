@@ -11,43 +11,10 @@
 
 CD3DRenderer::CD3DRenderer()
 {
-	m_hWnd = NULL;
-	m_dwWidth = 0;
-	m_dwHeight = 0;
-	m_dwCreateFlags = 0;
 
-
-	m_FillMode = D3D11_FILL_SOLID;
-	m_FeatureLevel = D3D_FEATURE_LEVEL_9_1;
-	m_driverType = D3D_DRIVER_TYPE_UNKNOWN;
-	m_pD3DDevice = NULL;
-	m_pImmediateContext = NULL;
-	m_pSwapChain = NULL;
-	m_pBackBuffer = NULL;
-	m_pDiffuseRTV = NULL;
-	m_pDSV = NULL;
-	m_pDepthStencil = NULL;
-
-	m_dwTextureWidth = 0;
-	m_dwTextureHeight = 0;
-
-	m_pYUVTexture = NULL;
-	m_pYUVTextureSRV = NULL;
-
-	m_pVertexBuffer = NULL;
-	m_pIndexBuffer = NULL;
-	m_pConstantBuffer = NULL;
-	m_pVertexLayout = NULL;
-	m_pVS = NULL;
-	m_pPS = NULL;
-
-	memset(m_ppDepthStencilState, 0, sizeof(m_ppDepthStencilState));
-	memset(m_ppBlendState, 0, sizeof(m_ppBlendState));
-	memset(m_ppRasterizeState, 0, sizeof(m_ppRasterizeState));
-	memset(m_ppSamplerState, 0, sizeof(m_ppSamplerState));
 }
 
-BOOL CD3DRenderer::Initialize(HWND hWnd, DWORD dwFlags)
+BOOL CD3DRenderer::Initialize(HWND hWnd, IMAGE_FORMAT fmt, DWORD dwFlags)
 {
 	BOOL	bResult = FALSE;
 
@@ -55,6 +22,7 @@ BOOL CD3DRenderer::Initialize(HWND hWnd, DWORD dwFlags)
 
 	m_hWnd = hWnd;
 	m_dwCreateFlags = dwFlags;
+	m_ImageFormat = fmt;
 
 	UINT createDeviceFlags = 0;
 #ifdef _USE_DEBUG_DEVICE
@@ -470,7 +438,7 @@ BOOL CD3DRenderer::CreateWritableTexture(DWORD dwWidth, DWORD dwHeight)
 
 
 	// YUV Texture
-	bResult = CreateShaderResourceViewFromTex2D(&m_pYUVTextureSRV, &m_pYUVTexture, dwWidth, dwHeight, format, D3D11_USAGE_DYNAMIC, D3D11_BIND_SHADER_RESOURCE, D3D11_CPU_ACCESS_WRITE, &initData);
+	bResult = CreateShaderResourceViewFromTex2D(&m_pTextureSRV, &m_pTexture, dwWidth, dwHeight, format, D3D11_USAGE_DYNAMIC, D3D11_BIND_SHADER_RESOURCE, D3D11_CPU_ACCESS_WRITE, &initData);
 	if (bResult)
 	{
 		m_dwTextureWidth = dwWidth;
@@ -485,15 +453,15 @@ lb_return:
 
 void CD3DRenderer::DeleteWritableTexture()
 {
-	if (m_pYUVTexture)
+	if (m_pTexture)
 	{
-		m_pYUVTexture->Release();
-		m_pYUVTexture = NULL;
+		m_pTexture->Release();
+		m_pTexture = NULL;
 	}
-	if (m_pYUVTextureSRV)
+	if (m_pTextureSRV)
 	{
-		m_pYUVTextureSRV->Release();
-		m_pYUVTextureSRV = NULL;
+		m_pTextureSRV->Release();
+		m_pTextureSRV = NULL;
 	}
 
 }
@@ -704,7 +672,8 @@ BOOL CD3DRenderer::InitShader()
 
 
 	m_pVS = CreateShader("sh_sprite.hlsl", "vsDefault", SHADER_TYPE_VERTEX_SHADER, 0);
-	m_pPS = CreateShader("sh_sprite.hlsl", "psDefault", SHADER_TYPE_PIXEL_SHADER, 0);
+	m_pPS_RGBA = CreateShader("sh_sprite.hlsl", "psRGBA", SHADER_TYPE_PIXEL_SHADER, 0);
+	m_pPS_YUV = CreateShader("sh_sprite.hlsl", "psYUV", SHADER_TYPE_PIXEL_SHADER, 0);
 
 	// Define the input layout
 	D3D11_INPUT_ELEMENT_DESC layoutSprite[] =
@@ -737,10 +706,15 @@ void CD3DRenderer::CleanupShader()
 		ReleaseShader(m_pVS);
 		m_pVS = NULL;
 	}
-	if (m_pPS)
+	if (m_pPS_RGBA)
 	{
-		ReleaseShader(m_pPS);
-		m_pPS = NULL;
+		ReleaseShader(m_pPS_RGBA);
+		m_pPS_RGBA = NULL;
+	}
+	if (m_pPS_YUV)
+	{
+		ReleaseShader(m_pPS_YUV);
+		m_pPS_YUV = NULL;
 	}
 	if (m_pVertexLayout)
 	{
@@ -1006,7 +980,17 @@ BOOL CD3DRenderer::Draw(DWORD dwWidth, DWORD dwHeight, DWORD dwPosX, DWORD dwPos
 
 
 	SHADER_HANDLE*		pVS = m_pVS;
-	SHADER_HANDLE*		pPS = m_pPS;
+	SHADER_HANDLE*		pPS = nullptr;
+	
+	switch (m_ImageFormat)
+	{
+		case IMAGE_FORMAT_RGBA:
+			pPS = m_pPS_RGBA;
+			break;
+		case IMAGE_FORMAT_YUV:
+			pPS = m_pPS_YUV;
+			break;
+	}
 
 	//if (RENDER_TYPE_SPRITE_GRAY & dwFlags)
 	//{
@@ -1042,7 +1026,7 @@ BOOL CD3DRenderer::Draw(DWORD dwWidth, DWORD dwHeight, DWORD dwPosX, DWORD dwPos
 
 
 
-	ID3D11ShaderResourceView* pTexResource = m_pYUVTextureSRV;
+	ID3D11ShaderResourceView* pTexResource = m_pTextureSRV;
 	pDeviceContext->PSSetShaderResources(0, 1, &pTexResource);
 	pDeviceContext->DrawIndexed(6, 0, 0);
 
@@ -1071,7 +1055,7 @@ void CD3DRenderer::Present(HWND hWnd)
 	m_pSwapChain->Present(uiSyncInterval, 0);
 
 }
-BOOL CD3DRenderer::UpdateYUVTexture(DWORD dwWidth, DWORD dwHeight, BYTE* pYBuffer, BYTE* pUBuffer, BYTE* pVBuffer, DWORD Stride)
+BOOL CD3DRenderer::UpdateTextureAsYUV(DWORD dwWidth, DWORD dwHeight, BYTE* pYBuffer, BYTE* pUBuffer, BYTE* pVBuffer, DWORD Stride)
 {
 	if (0 == dwWidth || 0 == dwHeight)
 		__debugbreak();
@@ -1089,7 +1073,7 @@ BOOL CD3DRenderer::UpdateYUVTexture(DWORD dwWidth, DWORD dwHeight, BYTE* pYBuffe
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	memset(&mappedResource, 0, sizeof(mappedResource));
 
-	HRESULT hr = pDeviceContext->Map(m_pYUVTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	HRESULT hr = pDeviceContext->Map(m_pTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	if (FAILED(hr))
 		__debugbreak();
 
@@ -1122,12 +1106,12 @@ BOOL CD3DRenderer::UpdateYUVTexture(DWORD dwWidth, DWORD dwHeight, BYTE* pYBuffe
 			pDestEntry += 4;
 		}
 	}
-	pDeviceContext->Unmap(m_pYUVTexture, 0);
+	pDeviceContext->Unmap(m_pTexture, 0);
 
 	return TRUE;
 
 }
-BOOL CD3DRenderer::UpdateYUVTexture10Bits(DWORD dwWidth, DWORD dwHeight, BYTE* pYBuffer, BYTE* pUBuffer, BYTE* pVBuffer, DWORD Stride)
+BOOL CD3DRenderer::UpdateTextureAsYUV10Bits(DWORD dwWidth, DWORD dwHeight, BYTE* pYBuffer, BYTE* pUBuffer, BYTE* pVBuffer, DWORD Stride)
 {
 	if (0 == dwWidth || 0 == dwHeight)
 		__debugbreak();
@@ -1146,7 +1130,7 @@ BOOL CD3DRenderer::UpdateYUVTexture10Bits(DWORD dwWidth, DWORD dwHeight, BYTE* p
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	memset(&mappedResource, 0, sizeof(mappedResource));
 
-	HRESULT hr = pDeviceContext->Map(m_pYUVTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	HRESULT hr = pDeviceContext->Map(m_pTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	if (FAILED(hr))
 		__debugbreak();
 
@@ -1182,7 +1166,7 @@ BOOL CD3DRenderer::UpdateYUVTexture10Bits(DWORD dwWidth, DWORD dwHeight, BYTE* p
 			pDestEntry += 4;
 		}
 	}
-	pDeviceContext->Unmap(m_pYUVTexture, 0);
+	pDeviceContext->Unmap(m_pTexture, 0);
 
 	return TRUE;
 
