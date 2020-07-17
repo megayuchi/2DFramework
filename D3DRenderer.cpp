@@ -3,7 +3,7 @@
 #include "d3d_type.h"
 #include "D3DHelper.h"
 #include "D3DRenderer.h"
-#include "../DirectXTex/DirectXTex.h"
+#include "DirectXTex\inc\DirectXTex.h"
 #include "Util.h"
 
 using namespace DirectX;

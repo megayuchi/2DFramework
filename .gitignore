@@ -5,6 +5,7 @@
 *.exp
 *.ipdb
 *.pdb
+*.iobj
 
 # Compiled Object files
 *.slo
@@ -29,7 +30,6 @@
 *.lai
 *.la
 *.a
-*.lib
 
 # Executables
 *.exe

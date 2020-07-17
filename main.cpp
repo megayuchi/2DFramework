@@ -7,26 +7,23 @@
 #include "D3DRenderer.h"
 #include "D2DView.h"
 
-
 #if defined(WIN64)
 	#ifdef _DEBUG
-		#pragma comment(lib, "../DirectXTex/Bin/Desktop_2019/x64/Debug/DirectXTex.lib")	
+		#pragma comment(lib, "DirectXTex/lib/x64/Debug/DirectXTex.lib")	
 	#else
-		#pragma comment(lib, "../DirectXTex/Bin/Desktop_2019/x64/Release/DirectXTex.lib")	
+		#pragma comment(lib, "DirectXTex/lib/x64/Release/DirectXTex.lib")	
 	#endif
 #elif defined(ARM64)
 	#ifdef _DEBUG
-		//#pragma comment(lib, "../DirectXTex/Bin/Desktop_2019/ARM64/Release/DirectXTex.lib")	
-		//#pragma comment(lib, "../DirectXTex/Bin/Desktop_2019/ARM64/Debug/DirectXTex.lib")	
-		//#pragma comment(lib, "../DirectXTex/Bin/Desktop_2019/ARM64/Release/DirectXTex.lib")	
+		#pragma comment(lib, "DirectXTex/lib/ARM64/Debug/DirectXTex.lib")	
 	#else
-		//#pragma comment(lib, "../DirectXTex/Bin/Desktop_2019/ARM64/Release/DirectXTex.lib")	
+		#pragma comment(lib, "DirectXTex/lib/ARM64/Release/DirectXTex.lib")	
 	#endif
 #else
 	#ifdef _DEBUG
-		#pragma comment(lib, "../DirectXTex/Bin/Desktop_2019/Win32/Debug/DirectXTex.lib")	
+		#pragma comment(lib, "DirectXTex/lib/x86/Debug/DirectXTex.lib")	
 	#else
-		#pragma comment(lib, "../DirectXTex/Bin/Desktop_2019/Win32/Release/DirectXTex.lib")	
+		#pragma comment(lib, "DirectXTex/lib/x86/Release/DirectXTex.lib")	
 	#endif
 #endif
 
