@@ -101,11 +101,9 @@
     <None Include="math.inl">
       <Filter>D3D</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shaders\sh_common.hlsl">
+    <None Include="Shaders\sh_common.hlsl">
       <Filter>D3D\Shader</Filter>
-    </FxCompile>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Shaders\sh_sprite.hlsl">
