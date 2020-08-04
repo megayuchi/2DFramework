@@ -13,10 +13,10 @@ using namespace DirectX;
 #pragma comment( lib, "d3d11.lib" )
 #pragma comment( lib, "D3DCompiler.lib" )
 
-BOOL DecompressDXT1ToRGBA(const uint8_t* pCompressedImage, uint32_t CompressedImagePitch, int iWidth, int iHeight, uint8_t* pDestBits, uint32_t DestPitch);
-BOOL DecompressDXT3ToRGBA(const uint8_t* pCompressedImage, uint32_t CompressedImagePitch, int iWidth, int iHeight, uint8_t* pDestBits, uint32_t DestPitch);
-BOOL DecompressDXT5ToRGBA(const uint8_t* pCompressedImage, uint32_t CompressedImagePitch, int iWidth, int iHeight, uint8_t* pDestBits, uint32_t DestPitch);
-BOOL DecompressDXTtoRGBA(const uint8_t* pCompressedImage, uint32_t CompressedImagePitch, int iWidth, int iHeight, DXGI_FORMAT srcFormat, uint8_t* pDestBits, uint32_t DestPitch);
+BOOL DecompressDXT1ToRGBA(const uint8_t* pCompressedImage, int iWidth, int iHeight, uint8_t* pDestBits, size_t DestPitch);
+BOOL DecompressDXT3ToRGBA(const uint8_t* pCompressedImage, int iWidth, int iHeight, uint8_t* pDestBits, size_t DestPitch);
+BOOL DecompressDXT5ToRGBA(const uint8_t* pCompressedImage, int iWidth, int iHeight, uint8_t* pDestBits, size_t DestPitch);
+BOOL DecompressDXTtoRGBA(const uint8_t* pCompressedImage, size_t CompressedImagePitch, int iWidth, int iHeight, DXGI_FORMAT srcFormat, uint8_t* pDestBits, size_t DestPitch);
 
 CD3DRenderer::CD3DRenderer()
 {
@@ -1310,15 +1310,15 @@ BOOL CD3DRenderer::Create32BitsImageFromFile(BYTE** ppOutBits, DWORD* pdwOutWidt
 		switch (img.format)
 		{
 			case DXGI_FORMAT_BC1_UNORM:
-				bDecompressResult = DecompressDXT1ToRGBA(img.pixels, img.rowPitch, img.width, img.height, pBits, img.width * 4);
+				bDecompressResult = DecompressDXT1ToRGBA(img.pixels, img.width, img.height, pBits, img.width * 4);
 				break;
 				
 			case DXGI_FORMAT_BC2_UNORM:
-				bDecompressResult = DecompressDXT3ToRGBA(img.pixels, img.rowPitch, img.width, img.height, pBits, img.width * 4);
+				bDecompressResult = DecompressDXT3ToRGBA(img.pixels, img.width, img.height, pBits, img.width * 4);
 				break;
 
 			case DXGI_FORMAT_BC3_UNORM:
-				bDecompressResult = DecompressDXT5ToRGBA(img.pixels, img.rowPitch, img.width, img.height, pBits, img.width * 4);
+				bDecompressResult = DecompressDXT5ToRGBA(img.pixels, img.width, img.height, pBits, img.width * 4);
 				break;
 			
 		}
@@ -1605,22 +1605,40 @@ BOOL CD3DRenderer::UpdateWritableTexture(BYTE* pSrc, DWORD dwWidth,DWORD dwHeigh
 }
 */
 
-BOOL DecompressDXT1ToRGBA(const uint8_t* pCompressedImage, uint32_t CompressedImagePitch, int iWidth, int iHeight, uint8_t* pDestBits, uint32_t DestPitch)
+BOOL DecompressDXT1ToRGBA(const uint8_t* pCompressedImage, int iWidth, int iHeight, uint8_t* pDestBits, size_t DestPitch)
 {
+	const uint32_t BlockSize = 8;
+	uint32_t BlockWidth = ((iWidth + 3) / 4);
+	uint32_t BlockHeight = ((iHeight + 3) / 4);
+	size_t CompressedImagePitch = BlockWidth * BlockSize;
+	uint32_t Size = CompressedImagePitch * BlockHeight;
+
 	BOOL bResult = DecompressDXTtoRGBA(pCompressedImage, CompressedImagePitch, iWidth, iHeight, DXGI_FORMAT_BC1_UNORM, pDestBits, DestPitch);
 	return bResult;
 }
-BOOL DecompressDXT3ToRGBA(const uint8_t* pCompressedImage, uint32_t CompressedImagePitch, int iWidth, int iHeight, uint8_t* pDestBits, uint32_t DestPitch)
+BOOL DecompressDXT3ToRGBA(const uint8_t* pCompressedImage, int iWidth, int iHeight, uint8_t* pDestBits, size_t DestPitch)
 {
+	const uint32_t BlockSize = 16;
+	uint32_t BlockWidth = ((iWidth + 3) / 4);
+	uint32_t BlockHeight = ((iHeight + 3) / 4);
+	size_t CompressedImagePitch = BlockWidth * BlockSize;
+	uint32_t Size = CompressedImagePitch * BlockHeight;
+
 	BOOL bResult = DecompressDXTtoRGBA(pCompressedImage, CompressedImagePitch, iWidth, iHeight, DXGI_FORMAT_BC2_UNORM, pDestBits, DestPitch);
 	return bResult;
 }
-BOOL DecompressDXT5ToRGBA(const uint8_t* pCompressedImage, uint32_t CompressedImagePitch, int iWidth, int iHeight, uint8_t* pDestBits, uint32_t DestPitch)
+BOOL DecompressDXT5ToRGBA(const uint8_t* pCompressedImage, int iWidth, int iHeight, uint8_t* pDestBits, size_t DestPitch)
 {
+	const uint32_t BlockSize = 16;
+	uint32_t BlockWidth = ((iWidth + 3) / 4);
+	uint32_t BlockHeight = ((iHeight + 3) / 4);
+	size_t CompressedImagePitch = BlockWidth * BlockSize;
+	uint32_t Size = CompressedImagePitch * BlockHeight;
+
 	BOOL bResult = DecompressDXTtoRGBA(pCompressedImage, CompressedImagePitch, iWidth, iHeight, DXGI_FORMAT_BC3_UNORM, pDestBits, DestPitch);
 	return bResult;
 }
-BOOL DecompressDXTtoRGBA(const uint8_t* pCompressedImage, uint32_t CompressedImagePitch, int iWidth, int iHeight, DXGI_FORMAT srcFormat, uint8_t* pDestBits, uint32_t DestPitch)
+BOOL DecompressDXTtoRGBA(const uint8_t* pCompressedImage, size_t CompressedImagePitch, int iWidth, int iHeight, DXGI_FORMAT srcFormat, uint8_t* pDestBits, size_t DestPitch)
 {
 	DirectX::ScratchImage DecompressedImage;
 	DirectX::TexMetadata	metaData = {};
