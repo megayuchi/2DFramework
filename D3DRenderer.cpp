@@ -3,8 +3,9 @@
 #include "d3d_type.h"
 #include "D3DHelper.h"
 #include "D3DRenderer.h"
-#include "DirectXTex\inc\DirectXTex.h"
+#include "DirectXTex/DirectXTex.h"
 #include "Util.h"
+#include "s3tc.h"
 
 using namespace DirectX;
 
@@ -1244,6 +1245,7 @@ BOOL CD3DRenderer::Create32BitsImageFromFile(BYTE** ppOutBits, DWORD* pdwOutWidt
 {
 	BOOL	bResult = FALSE;
 
+	DirectX::ScratchImage DecompressedImage;
 	// only understands .dds files for now
 	// return true if success
 
@@ -1282,15 +1284,13 @@ BOOL CD3DRenderer::Create32BitsImageFromFile(BYTE** ppOutBits, DWORD* pdwOutWidt
 	}
 	const DirectX::Image*	pImages = scratchImage.GetImages();
 	
+
 	size_t index = metaData.ComputeIndex(0, 0, 0);
 	const Image& img = pImages[0];
 	
 	if (img.format != metaData.format)
 		goto lb_close_del_return;
     
-	if (img.format != DXGI_FORMAT_R8G8B8A8_UNORM && img.format != DXGI_FORMAT_B8G8R8A8_UNORM)
-		goto lb_close_del_return;
-
 	if (!img.pixels)
 		goto lb_close_del_return;
 
@@ -1298,14 +1298,27 @@ BOOL CD3DRenderer::Create32BitsImageFromFile(BYTE** ppOutBits, DWORD* pdwOutWidt
 	BYTE* pBits = (BYTE*)malloc(dwMemSize);
 	memset(pBits, 0, dwMemSize);
 
-	BYTE*	pDest = pBits;
 	BYTE*	pSrc = (BYTE*)img.pixels;
+	BYTE*	pDest = pBits;
+	
+	if (img.format != DXGI_FORMAT_R8G8B8A8_UNORM && img.format != DXGI_FORMAT_B8G8R8A8_UNORM)
+	{
+
+		
+		HRESULT hr = DirectX::Decompress(img, DXGI_FORMAT_R8G8B8A8_UNORM, DecompressedImage);
+		pSrc = DecompressedImage.GetPixels();
+		//_ASSERT(_CrtCheckMemory());
+		//BlockDecompressImageDXT5(img.width, img.height, (const unsigned char*)pRawData, (unsigned long*)pBits);
+		//_ASSERT(_CrtCheckMemory());
+	}
+
 	for (DWORD y = 0; y < img.height; y++)
 	{
 		memcpy(pDest, pSrc, img.width * 4);
 		pDest += (img.width * 4);
 		pSrc += img.rowPitch;
 	}
+
 	*ppOutBits = pBits;
 	*pdwOutWidth = (DWORD)img.width;
 	*pdwOutHeight = (DWORD)img.height;

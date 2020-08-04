@@ -9,21 +9,21 @@
 
 #if defined(WIN64)
 	#ifdef _DEBUG
-		#pragma comment(lib, "DirectXTex/lib_x64_debug/DirectXTex.lib")	
+		#pragma comment(lib, "./DirectXTex/Bin/Desktop_2019/x64/Debug/DirectXTex.lib")	
 	#else
-		#pragma comment(lib, "DirectXTex/lib_x64_release/DirectXTex.lib")	
+		#pragma comment(lib, "./DirectXTex/Bin/Desktop_2019/x64/Release/DirectXTex.lib")	
 	#endif
 #elif defined(ARM64)
 	#ifdef _DEBUG
-		#pragma comment(lib, "DirectXTex/lib_ARM64_debug/DirectXTex.lib")	
+		#pragma comment(lib, "./DirectXTex/Bin/Desktop_2019/arm64/Debug/DirectXTex.lib")	
 	#else
-		#pragma comment(lib, "DirectXTex/lib_ARM64_release/DirectXTex.lib")	
+		#pragma comment(lib, "./DirectXTex/Bin/Desktop_2019/arm64/Release/DirectXTex.lib")	
 	#endif
 #else
 	#ifdef _DEBUG
-		#pragma comment(lib, "DirectXTex/lib_x86_debug/DirectXTex.lib")	
+		#pragma comment(lib, "./DirectXTex/Bin/Desktop_2019/Win32/Debug/DirectXTex.lib")	
 	#else
-		#pragma comment(lib, "DirectXTex/lib_x86_release/DirectXTex.lib")	
+		#pragma comment(lib, "./DirectXTex/Bin/Desktop_2019/Win32/Release/DirectXTex.lib")	
 	#endif
 #endif
 
@@ -98,7 +98,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	BYTE*	pImageBits = nullptr;
 	DWORD	dwImageWidth = 0;
 	DWORD	dwImageHeight = 0;
-	if (!g_pD3DRenderer->Create32BitsImageFromFile(&pImageBits, &dwImageWidth, &dwImageHeight, L"./Data/03_chara.png"))
+	if (!g_pD3DRenderer->Create32BitsImageFromFile(&pImageBits, &dwImageWidth, &dwImageHeight, L"./Data/03_chara.dds"))
 	{
 		__debugbreak();
 	}
