@@ -5,7 +5,6 @@
 #include "D3DRenderer.h"
 #include "DirectXTex/DirectXTex.h"
 #include "Util.h"
-#include "s3tc.h"
 
 using namespace DirectX;
 
@@ -13,6 +12,11 @@ using namespace DirectX;
 #pragma comment( lib, "DXGI.lib" )
 #pragma comment( lib, "d3d11.lib" )
 #pragma comment( lib, "D3DCompiler.lib" )
+
+BOOL DecompressDXT1ToRGBA(const uint8_t* pCompressedImage, uint32_t CompressedImagePitch, int iWidth, int iHeight, uint8_t* pDestBits, uint32_t DestPitch);
+BOOL DecompressDXT3ToRGBA(const uint8_t* pCompressedImage, uint32_t CompressedImagePitch, int iWidth, int iHeight, uint8_t* pDestBits, uint32_t DestPitch);
+BOOL DecompressDXT5ToRGBA(const uint8_t* pCompressedImage, uint32_t CompressedImagePitch, int iWidth, int iHeight, uint8_t* pDestBits, uint32_t DestPitch);
+BOOL DecompressDXTtoRGBA(const uint8_t* pCompressedImage, uint32_t CompressedImagePitch, int iWidth, int iHeight, DXGI_FORMAT srcFormat, uint8_t* pDestBits, uint32_t DestPitch);
 
 CD3DRenderer::CD3DRenderer()
 {
@@ -1298,25 +1302,49 @@ BOOL CD3DRenderer::Create32BitsImageFromFile(BYTE** ppOutBits, DWORD* pdwOutWidt
 	BYTE* pBits = (BYTE*)malloc(dwMemSize);
 	memset(pBits, 0, dwMemSize);
 
-	BYTE*	pSrc = (BYTE*)img.pixels;
-	BYTE*	pDest = pBits;
+	
 	
 	if (img.format != DXGI_FORMAT_R8G8B8A8_UNORM && img.format != DXGI_FORMAT_B8G8R8A8_UNORM)
 	{
+		BOOL	bDecompressResult = FALSE;
+		switch (img.format)
+		{
+			case DXGI_FORMAT_BC1_UNORM:
+				bDecompressResult = DecompressDXT1ToRGBA(img.pixels, img.rowPitch, img.width, img.height, pBits, img.width * 4);
+				break;
+				
+			case DXGI_FORMAT_BC2_UNORM:
+				bDecompressResult = DecompressDXT3ToRGBA(img.pixels, img.rowPitch, img.width, img.height, pBits, img.width * 4);
+				break;
 
+			case DXGI_FORMAT_BC3_UNORM:
+				bDecompressResult = DecompressDXT5ToRGBA(img.pixels, img.rowPitch, img.width, img.height, pBits, img.width * 4);
+				break;
+			
+		}
+		//DirectX::Image dxtImage = {};
+		//dxtImage.width = img.width;
+		//dxtImage.height = img.height;
+		//dxtImage.format = metaData.format;
+		//dxtImage.pixels = img.pixels;
+		//dxtImage.rowPitch = img.rowPitch;
 		
-		HRESULT hr = DirectX::Decompress(img, DXGI_FORMAT_R8G8B8A8_UNORM, DecompressedImage);
-		pSrc = DecompressedImage.GetPixels();
-		//_ASSERT(_CrtCheckMemory());
-		//BlockDecompressImageDXT5(img.width, img.height, (const unsigned char*)pRawData, (unsigned long*)pBits);
-		//_ASSERT(_CrtCheckMemory());
+		//HRESULT hr1 = DirectX::Decompress(&dxtImage, 1, metaData, DXGI_FORMAT_R8G8B8A8_UNORM, DecompressedImage);
+		//HRESULT hr = DirectX::Decompress(img, DXGI_FORMAT_R8G8B8A8_UNORM, DecompressedImage);
+		//pSrc = DecompressedImage.GetPixels();
+		
 	}
-
-	for (DWORD y = 0; y < img.height; y++)
+	else
 	{
-		memcpy(pDest, pSrc, img.width * 4);
-		pDest += (img.width * 4);
-		pSrc += img.rowPitch;
+		BYTE*	pSrc = (BYTE*)img.pixels;
+		BYTE*	pDest = pBits;
+
+		for (DWORD y = 0; y < img.height; y++)
+		{
+			memcpy(pDest, pSrc, img.width * 4);
+			pDest += (img.width * 4);
+			pSrc += img.rowPitch;
+		}
 	}
 
 	*ppOutBits = pBits;
@@ -1576,3 +1604,58 @@ BOOL CD3DRenderer::UpdateWritableTexture(BYTE* pSrc, DWORD dwWidth,DWORD dwHeigh
 
 }
 */
+
+BOOL DecompressDXT1ToRGBA(const uint8_t* pCompressedImage, uint32_t CompressedImagePitch, int iWidth, int iHeight, uint8_t* pDestBits, uint32_t DestPitch)
+{
+	BOOL bResult = DecompressDXTtoRGBA(pCompressedImage, CompressedImagePitch, iWidth, iHeight, DXGI_FORMAT_BC1_UNORM, pDestBits, DestPitch);
+	return bResult;
+}
+BOOL DecompressDXT3ToRGBA(const uint8_t* pCompressedImage, uint32_t CompressedImagePitch, int iWidth, int iHeight, uint8_t* pDestBits, uint32_t DestPitch)
+{
+	BOOL bResult = DecompressDXTtoRGBA(pCompressedImage, CompressedImagePitch, iWidth, iHeight, DXGI_FORMAT_BC2_UNORM, pDestBits, DestPitch);
+	return bResult;
+}
+BOOL DecompressDXT5ToRGBA(const uint8_t* pCompressedImage, uint32_t CompressedImagePitch, int iWidth, int iHeight, uint8_t* pDestBits, uint32_t DestPitch)
+{
+	BOOL bResult = DecompressDXTtoRGBA(pCompressedImage, CompressedImagePitch, iWidth, iHeight, DXGI_FORMAT_BC3_UNORM, pDestBits, DestPitch);
+	return bResult;
+}
+BOOL DecompressDXTtoRGBA(const uint8_t* pCompressedImage, uint32_t CompressedImagePitch, int iWidth, int iHeight, DXGI_FORMAT srcFormat, uint8_t* pDestBits, uint32_t DestPitch)
+{
+	DirectX::ScratchImage DecompressedImage;
+	DirectX::TexMetadata	metaData = {};
+
+	DirectX::Image dxtImage = {};
+	dxtImage.pixels = (uint8_t*)pCompressedImage;
+	dxtImage.width = iWidth;
+	dxtImage.height = iHeight;
+	dxtImage.format = srcFormat;
+	dxtImage.rowPitch = CompressedImagePitch;
+
+	metaData.width = iWidth;
+	metaData.height = iHeight;
+	metaData.depth = 1;
+	metaData.arraySize = 1;
+	metaData.mipLevels = 1;
+	metaData.format = srcFormat;
+	metaData.dimension = TEX_DIMENSION_TEXTURE2D;
+
+	HRESULT hr = DirectX::Decompress(&dxtImage, 1, metaData, DXGI_FORMAT_R8G8B8A8_UNORM, DecompressedImage);
+	if (S_OK != hr)
+	{
+		return FALSE;
+	}
+	BYTE*	pSrc = DecompressedImage.GetPixels();
+	BYTE*	pDest = pDestBits;
+
+	const DirectX::Image* pSrcImage = DecompressedImage.GetImages();
+	size_t DecompressedSrcPitch = pSrcImage->rowPitch;
+
+	for (DWORD y = 0; y < iHeight; y++)
+	{
+		memcpy(pDest, pSrc, iWidth * 4);
+		pDest += DestPitch;
+		pSrc += DecompressedSrcPitch;
+	}
+	return TRUE;
+}

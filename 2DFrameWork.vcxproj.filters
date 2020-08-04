@@ -31,9 +31,6 @@
     <Filter Include="D3D\Shader">
       <UniqueIdentifier>{0b37ae14-b95b-4854-a7ec-366a7d730f75}</UniqueIdentifier>
     </Filter>
-    <Filter Include="s3tc">
-      <UniqueIdentifier>{c228b8f3-81ed-4e5e-a9de-be1f7d4ce642}</UniqueIdentifier>
-    </Filter>
     <Filter Include="DirectXTex">
       <UniqueIdentifier>{5ad10e01-9800-40dd-ba10-722c9d4a77aa}</UniqueIdentifier>
     </Filter>
@@ -69,9 +66,6 @@
     <ClInclude Include="Util.h">
       <Filter>Util</Filter>
     </ClInclude>
-    <ClInclude Include="s3tc.h">
-      <Filter>s3tc</Filter>
-    </ClInclude>
     <ClInclude Include="DirectXTex\DirectXTex.h">
       <Filter>DirectXTex</Filter>
     </ClInclude>
@@ -94,9 +88,6 @@
     </ClCompile>
     <ClCompile Include="Util.cpp">
       <Filter>Util</Filter>
-    </ClCompile>
-    <ClCompile Include="s3tc.cpp">
-      <Filter>s3tc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -98,7 +98,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	BYTE*	pImageBits = nullptr;
 	DWORD	dwImageWidth = 0;
 	DWORD	dwImageHeight = 0;
-	if (!g_pD3DRenderer->Create32BitsImageFromFile(&pImageBits, &dwImageWidth, &dwImageHeight, L"./Data/03_chara.dds"))
+	//if (!g_pD3DRenderer->Create32BitsImageFromFile(&pImageBits, &dwImageWidth, &dwImageHeight, L"./Data/03_chara.png"))
+	//if (!g_pD3DRenderer->Create32BitsImageFromFile(&pImageBits, &dwImageWidth, &dwImageHeight, L"./Data/03_chara_dxt1.dds"))
+	//if (!g_pD3DRenderer->Create32BitsImageFromFile(&pImageBits, &dwImageWidth, &dwImageHeight, L"./Data/03_chara_dxt3.dds"))
+	if (!g_pD3DRenderer->Create32BitsImageFromFile(&pImageBits, &dwImageWidth, &dwImageHeight, L"./Data/03_chara_dxt5.dds"))
 	{
 		__debugbreak();
 	}
