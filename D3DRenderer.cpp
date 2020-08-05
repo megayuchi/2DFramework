@@ -18,6 +18,8 @@ BOOL DecompressDXT3ToRGBA(const uint8_t* pCompressedImage, int iWidth, int iHeig
 BOOL DecompressDXT5ToRGBA(const uint8_t* pCompressedImage, int iWidth, int iHeight, uint8_t* pDestBits, size_t DestPitch);
 BOOL DecompressDXTtoRGBA(const uint8_t* pCompressedImage, size_t CompressedImagePitch, int iWidth, int iHeight, DXGI_FORMAT srcFormat, uint8_t* pDestBits, size_t DestPitch);
 
+BOOL CompressRGBAToDXT(const uint8_t* pRGBAImage, size_t ImageRowPitch, size_t ImageSlicePitch, int iWidth, int iHeight, DXGI_FORMAT destFormat, uint8_t* pDestCompressedBits, size_t DestPitch);
+
 CD3DRenderer::CD3DRenderer()
 {
 
@@ -1336,6 +1338,27 @@ BOOL CD3DRenderer::Create32BitsImageFromFile(BYTE** ppOutBits, DWORD* pdwOutWidt
 	}
 	else
 	{
+		// 압축 테스트 , DXT5로 압축
+		DWORD BlockSize = 16;
+		uint32_t BlockWidth = ((img.width + 3) / 4);
+		uint32_t BlockHeight = ((img.height + 3) / 4);
+		uint32_t CompressedPitch = BlockWidth * BlockSize;
+		uint32_t CompressedSize = CompressedPitch * BlockHeight;
+
+		BYTE*	pCompressedBits = (BYTE*)malloc(CompressedSize);
+		memset(pCompressedBits, 0, CompressedSize);
+		CompressRGBAToDXT((uint8_t*)img.pixels, img.rowPitch, img.slicePitch, img.width, img.height, DXGI_FORMAT_BC3_UNORM, pCompressedBits, CompressedPitch);
+		
+		// 압축 해제
+		BOOL bDecompressResult = DecompressDXT5ToRGBA(pCompressedBits, img.width, img.height, pBits, img.width * 4);
+		
+		if (pCompressedBits)
+		{
+			free(pCompressedBits);
+			pCompressedBits = nullptr;
+		}
+		
+		/*
 		BYTE*	pSrc = (BYTE*)img.pixels;
 		BYTE*	pDest = pBits;
 
@@ -1345,6 +1368,7 @@ BOOL CD3DRenderer::Create32BitsImageFromFile(BYTE** ppOutBits, DWORD* pdwOutWidt
 			pDest += (img.width * 4);
 			pSrc += img.rowPitch;
 		}
+		*/
 	}
 
 	*ppOutBits = pBits;
@@ -1674,6 +1698,59 @@ BOOL DecompressDXTtoRGBA(const uint8_t* pCompressedImage, size_t CompressedImage
 		memcpy(pDest, pSrc, iWidth * 4);
 		pDest += DestPitch;
 		pSrc += DecompressedSrcPitch;
+	}
+	return TRUE;
+}
+
+BOOL CompressRGBAToDXT(const uint8_t* pRGBAImage, size_t ImageRowPitch, size_t ImageSlicePitch, int iWidth, int iHeight, DXGI_FORMAT destFormat, uint8_t* pDestCompressedBits, size_t DestPitch)
+{
+	DirectX::ScratchImage CompressedImage;
+
+	DirectX::Image dxtImage = {};
+	dxtImage.pixels = (uint8_t*)pRGBAImage;
+	dxtImage.width = iWidth;
+	dxtImage.height = iHeight;
+	dxtImage.format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	dxtImage.rowPitch = ImageRowPitch;
+	dxtImage.slicePitch = ImageSlicePitch;
+
+	HRESULT hr = DirectX::Compress(dxtImage, destFormat, DirectX::TEX_COMPRESS_DEFAULT, 0.5f, CompressedImage);
+	if (S_OK != hr)
+	{
+		return FALSE;
+	}
+	DWORD BlockSize = 0;
+	switch (destFormat)
+	{
+		case DXGI_FORMAT_BC1_UNORM:
+			BlockSize = 8;
+			break;
+		
+		case DXGI_FORMAT_BC3_UNORM:
+		case DXGI_FORMAT_BC5_UNORM:
+			BlockSize = 16;
+			break;
+		default:
+			__debugbreak();
+	}
+
+	BYTE*	pSrc = CompressedImage.GetPixels();
+	BYTE*	pDest = pDestCompressedBits;
+	const DirectX::Image* pSrcImage = CompressedImage.GetImages();
+	pSrcImage->rowPitch;
+
+	size_t CompressedSrcPitch = pSrcImage->rowPitch;
+
+	uint32_t BlockWidth = ((iWidth + 3) / 4);
+	uint32_t BlockHeight = ((iHeight + 3) / 4);
+	//uint32_t SrcPitch = BlockWidth * BlockSize;
+	//uint32_t Size = SrcPitch * BlockHeight;
+	//uint32_t WorkBufferPitch = srcW * 4;
+	for (DWORD y = 0; y < BlockHeight; y++)
+	{
+		memcpy(pDest, pSrc, BlockWidth * BlockSize);
+		pDest += DestPitch;
+		pSrc += CompressedSrcPitch;
 	}
 	return TRUE;
 }
